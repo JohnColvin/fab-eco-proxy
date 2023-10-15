@@ -1212,6 +1212,14 @@
   dependencies:
     "@flesh-and-blood/types" "^0.0.97"
 
+"@flesh-and-blood/search@^0.0.97":
+  version "0.0.97"
+  resolved "https://registry.yarnpkg.com/@flesh-and-blood/search/-/search-0.0.97.tgz#d6111f10ad079068a2f374fafc6e934281bebd28"
+  integrity sha512-dJ8XNzUKx5i+qZPIl93vnkeHq/IyGr8Gnu0YoNFkDl2+e+fRZ9d3npbY8q2e2uABtmV0cdTLrunMjgGkgyso/g==
+  dependencies:
+    "@flesh-and-blood/types" "^0.0.97"
+    fuse.js "^6.6.2"
+
 "@flesh-and-blood/types@^0.0.97":
   version "0.0.97"
   resolved "https://registry.yarnpkg.com/@flesh-and-blood/types/-/types-0.0.97.tgz#be290c6557eeda81fb53d1fdfe2fca6193ac91fa"

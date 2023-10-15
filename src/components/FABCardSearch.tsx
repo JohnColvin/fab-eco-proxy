@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import FABCard from "./FABCard";
-import { CardsDB } from "../db/cardDB";
 import {
   ButtonGroup,
   Col,
@@ -11,7 +10,10 @@ import {
   Row,
 } from "react-bootstrap";
 import EcoProxyCard from "../db/interfaces";
+import { cards } from "@flesh-and-blood/cards";
 import { Card } from "@flesh-and-blood/types";
+import debounce from 'lodash/debounce'
+import Search from "@flesh-and-blood/search";
 import FABCardsListItem from "./FABCardSearchListItemt";
 import ToggleButton from "react-bootstrap/ToggleButton";
 import * as Icon from "react-bootstrap-icons";
@@ -27,24 +29,32 @@ enum SearchDisplayMode {
   List = "list",
 }
 
+const { search: searchCards } = new Search(cards)
+
+const useDebounce = (func: any, delay: number) => useMemo(() => debounce(func, delay), [func, delay])
+
 export default function FABCardSearch(props: FABCardSearchProps) {
   const { addCardToPrint, addedCards } = props;
-  const [searchTerm, setSearchTerm] = useState("fyen");
+  const [searchTerm, setSearchTerm] = useState('');
   // const [results, setResults] = useState<Index.Result[]>([]);
   const [results, setResults] = useState<Card[]>([]);
-  const [mode, setMode] = useState<SearchDisplayMode>(SearchDisplayMode.Cards);
+  const [mode, setMode] = useState<SearchDisplayMode>(SearchDisplayMode.List);
+  const [isSearching, setIsSearching] = useState(false)
+
+  const search = useCallback((query: string) => {
+    setResults(query.length > 0 ? searchCards(query).searchResults : []);
+    setIsSearching(false);
+  }, [])
+
+  const debouncedSearch = useDebounce(search, 750)
 
   const handleChange = (value: string) => {
+    setIsSearching(true);
+    debouncedSearch.cancel();
     setSearchTerm(value);
   };
 
-  useEffect(() => {
-    // const queryString = "*" + searchTerm.trim().split(" ").join("* *") + "*";
-    // const res =
-    //   searchTerm === "" ? [] : cardDB.search(queryString).slice(0, 20);
-    const res = CardsDB.getInstance().searchCards(searchTerm.trim());
-    setResults(res);
-  }, [searchTerm]);
+  useEffect(() => debouncedSearch(searchTerm), [debouncedSearch, searchTerm]);
 
   const idCountMap = getCardsQuantityById(addedCards);
 
@@ -58,9 +68,10 @@ export default function FABCardSearch(props: FABCardSearchProps) {
                 <Icon.Search size={17} />
               </InputGroup.Text>
               <Form.Control
+                autoFocus
+                defaultValue={searchTerm}
                 type="text"
                 placeholder="Search"
-                value={searchTerm}
                 onChange={(event) => handleChange(event.target.value)}
               />
             </InputGroup>
@@ -98,7 +109,8 @@ export default function FABCardSearch(props: FABCardSearchProps) {
             </ButtonGroup>
           </Col>
         </Row>
-        {mode === SearchDisplayMode.Cards && (
+        { isSearching && 'Searching...' }
+        {!isSearching && mode === SearchDisplayMode.Cards && (
           <Row>
             {results.map((res, i) => (
               <Col md="4" lg="3" xl="2" key={res.cardIdentifier}>
@@ -116,7 +128,7 @@ export default function FABCardSearch(props: FABCardSearchProps) {
             ))}
           </Row>
         )}
-        {mode === SearchDisplayMode.List && (
+        {!isSearching && mode === SearchDisplayMode.List && (
           <ListGroup>
             {results.map((res, i) => (
               <FABCardsListItem
